@@ -3,6 +3,7 @@ import org.apache.tools.zip.Zip64Mode
 
 apply plugin: 'java'
 apply plugin: 'com.github.johnrengelman.shadow'
+apply plugin: 'maven-publish'
 
 
 compileJava {
@@ -85,6 +86,46 @@ def determineAndSetVersion() {
         } else {
             // we are unable to part the last token as an integer, so we just append SNAPSHOT to this version
             version = versionParts[0..versionParts.size()-1].join('.') + '-SNAPSHOT'
+        }
+    }
+}
+
+
+// If CI/CD passes -PreleaseVersion, set it as project.version
+if (project.hasProperty("releaseVersion")) {
+    version = project.property("releaseVersion")
+} else {
+    version = "0.0.0-SNAPSHOT"
+}
+
+
+// at the end of the file, append (or merge) this publishing block:
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            // publish the shadow (fat) jar created by shadowJar task
+            artifact tasks.shadowJar
+
+            groupId = project.group ?: 'com.github.mubaraque-ali'
+            artifactId = 'apache-ranger-plugin'
+            version = project.version
+
+            pom {
+                name.set("DataHub Ranger Auth Plugin")
+                description.set("Apache Ranger authorization plugin for DataHub")
+                url.set("https://github.com/mubaraque-ali/datahub-ranger-auth-plugin")
+            }
+        }
+    }
+
+    repositories {
+        maven {
+            name = "GitHubPackages"
+            url = uri("https://maven.pkg.github.com/mubaraque-ali/datahub-ranger-auth-plugin")
+            credentials {
+                username = System.getenv("GITHUB_ACTOR") ?: project.findProperty("gpr.user")
+                password = System.getenv("GITHUB_TOKEN") ?: project.findProperty("gpr.key")
+            }
         }
     }
 }
