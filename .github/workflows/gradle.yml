@@ -139,15 +139,7 @@ jobs:
           server-id: github
           server-username: ${{ github.actor }}
           server-password: ${{ secrets.PAT_TOKEN }}
-
-      - name: Publish to GitHub Packages (Maven)
-        env:
-          GITHUB_ACTOR: ${{ github.actor }}
-          GITHUB_TOKEN: ${{ secrets.PAT_TOKEN }}
-        run: |
-          # pass releaseVersion to gradle so publishing coordinates match tag if needed
-          ./gradlew :apache-ranger-plugin:publish --no-daemon -PreleaseVersion=${{ steps.determine_tag.outputs.tag }}
-
+      
       - name: Create GitHub Release and upload JAR
         uses: softprops/action-gh-release@v2
         with:
@@ -156,3 +148,11 @@ jobs:
           files: ${{ steps.findjar.outputs.jar }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      
+      # - name: Publish to GitHub Packages (Maven)
+      #   env:
+      #     GITHUB_ACTOR: ${{ github.actor }}
+      #     GITHUB_TOKEN: ${{ secrets.PAT_TOKEN }}
+      #   run: |
+      #     # pass releaseVersion to gradle so publishing coordinates match tag if needed
+      #     ./gradlew :apache-ranger-plugin:publish --no-daemon -PreleaseVersion=${{ steps.determine_tag.outputs.tag }}
